@@ -4,6 +4,8 @@
   :license "MIT"
   :version "0.1"
   :serial t
-  :depends-on ("alexandria" "iterate")
+  :depends-on ("alexandria" "iterate" "anaphora" "let-plus")
   :components ((:file "package")
-	       (:file "dsl-quote")))
+	       (:file "dsl-quote")
+	       (:file "with-local-dsl")
+	       (:file "define-prompt")))

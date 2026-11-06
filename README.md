@@ -51,6 +51,69 @@ When writing multi-layer DSLs, there is no clear expansion timing between two ad
 `dsl-progn` is the same as `progn`, used for distinction.  
 `dsl-expand` performs `dsl` expansion.  
 `with-dsl` expands the return value of `body` as DSL code.
+## Usage
+`dsl-quote`, or `dq` for short, is similar to `quote` but can accept multiple values; it is used to specify expressions to be retained at the current level and not expanded.
+
+`dsl-quasiquote`, or `dqq` for short, is similar to `quasiquote` but can accept multiple values. `dsl-comma` can be used inside for local expansion, and it supports multiple levels of nesting.
+
+`dsl-comma`, or `dc` for short, is similar to `comma` but can accept multiple values, and performs local expansion inside `quasiquote`.
+
+`dsl-progn` is the same as `progn`, and is used for distinction.
+
+`dsl-expand` performs `dsl` expansion.
+
+`with-dsl` transforms the return value of `body` as `DSL` code.
+
+```lisp
+(defmacro foo () '(list 1 2 3))
+
+(with-dsl (macroexpand)
+  `(append (foo) (foo)))
+;; Returns
+;;(APPEND (LIST 1 2 3) (LIST 1 2 3))
+(with-dsl (macroexpand)
+  `(append (dq (foo)) (foo)))
+;; Returns
+;;(APPEND (FOO) (LIST 1 2 3))
+```
+
+`with-local-dsl` defines local `DSL` code transformations.
+
+```lisp
+(with-local-dsl ((foo () "foo outer"))
+  (with-local-dsl ((foo () "foo inner"))
+    `(concatenate 'string (foo) (dq (foo)))))
+;; Returns
+;;(CONCATENATE 'STRING "foo inner" "foo outer")
+(with-local-dsl ((foo (n) (declare (ignorable n)) "foo outer"))
+  (with-local-dsl ((foo (&whole w n) (if (zerop n)
+				"foo inner"
+				`(dq ,w))))
+    `(concatenate 'string (foo 1) (foo 0))))
+;; Returns
+;;(CONCATENATE 'STRING "foo outer" "foo inner")
+```
+
+`dsl-lambda` defines an anonymous `DSL` transformation function and supports `&whole`.
+
+```lisp
+(funcall (dsl-lambda (a b) (+ a b)) '(func 1 2))
+;; Returns 3
+(funcall (dsl-lambda (&whole whole a b) (list whole (+ a b))) '(func 1 2))
+;; Returns
+;;((FUNC 1 2) 3)
+```
+
+`define-prompt` defines IDE code hints for `DSL` transformation functions.
+
+```lisp
+(macroexpand-1 '(define-prompt (dsl-func language) (a b c &key (d 0))))
+;; Returns
+;;(DEFMACRO DSL-FUNC (A B C &KEY (D 0))
+;;  (DECLARE (IGNORABLE A B C D))
+;;  (ERROR 'SIMPLE-ERROR :FORMAT-CONTROL "~a is ~a dsl macro" :FORMAT-ARGUMENTS
+;;         (LIST 'DSL-FUNC 'LANGUAGE)))
+```
 
 ## Examples
 

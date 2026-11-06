@@ -48,7 +48,51 @@
 `dsl-comma` 或简写为 `dc` 类似 `comma` ，但可以传多个值，在 `quasiquote` 内部进行局部展开
 `dsl-progn` 和 `progn` 一样，用于区分。
 `dsl-expand` 进行 `dsl` 展开
-`with-dsl` 将 `body` 返回值作为 `dsl` 代码展开
+`with-dsl` 将 `body` 返回值作为 `DSL` 代码转换
+```lisp
+(defmacro foo () '(list 1 2 3))
+
+(with-dsl (macroexpand)
+  `(append (foo) (foo)))
+;;返回
+;;(APPEND (LIST 1 2 3) (LIST 1 2 3))
+(with-dsl (macroexpand)
+  `(append (dq (foo)) (foo)))
+;;返回
+;;(APPEND (FOO) (LIST 1 2 3))
+```
+`with-local-dsl` 定义局部 `DSL` 代码转换
+```lisp
+(with-local-dsl ((foo () "foo outer"))
+  (with-local-dsl ((foo () "foo inner"))
+    `(concatenate 'string (foo) (dq (foo)))))
+;;返回
+;;(CONCATENATE 'STRING "foo inner" "foo outer")
+(with-local-dsl ((foo (n) (declare (ignorable n)) "foo outer"))
+  (with-local-dsl ((foo (&whole w n) (if (zerop n)
+				"foo inner"
+				`(dq ,w))))
+    `(concatenate 'string (foo 1) (foo 0))))
+;;返回
+;;(CONCATENATE 'STRING "foo outer" "foo inner")
+```
+`dsl-lambda` 定义 `DSL` 转换匿名函数，支持&whole
+```lisp
+(funcall (dsl-lambda (a b) (+ a b)) '(func 1 2))
+;;返回3
+(funcall (dsl-lambda (&whole whole a b) (list whole (+ a b))) '(func 1 2))
+;;返回
+;;((FUNC 1 2) 3)
+```
+`define-prompt` 定义 `IDE` 对 `DSL` 转换函数的代码提示
+```lisp
+(macroexpand-1 '(define-prompt (dsl-func language) (a b c &key (d 0))))
+;;返回
+;;(DEFMACRO DSL-FUNC (A B C &KEY (D 0))
+;;  (DECLARE (IGNORABLE A B C D))
+;;  (ERROR 'SIMPLE-ERROR :FORMAT-CONTROL "~a is ~a dsl macro" :FORMAT-ARGUMENTS
+;;         (LIST 'DSL-FUNC 'LANGUAGE)))
+```
 
 ## 例子
 在开头的问题描述中可以这样写调用 `dsl1` 的 `test` 函数
