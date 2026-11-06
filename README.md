@@ -44,14 +44,6 @@ When writing multi-layer DSLs, there is no clear expansion timing between two ad
 `dsl-quote` provides a preservation mechanism, modeled after Common Lisp's `quote`, `quasiquote`, and `comma`.
 
 ## Usage
-
-`dsl-quote`, or `dq` for short, is like `quote` but can take multiple values. It is used to specify that the current layer should preserve expressions without expanding them.  
-`dsl-quasiquote`, or `dqq` for short, is like `quasiquote` but can take multiple values. Inside it, `dsl-comma` can be used for local expansion, and it can be nested multiple levels.  
-`dsl-comma`, or `dc` for short, is like `comma`, but can take multiple values and performs local expansion inside `quasiquote`.  
-`dsl-progn` is the same as `progn`, used for distinction.  
-`dsl-expand` performs `dsl` expansion.  
-`with-dsl` expands the return value of `body` as DSL code.
-## Usage
 `dsl-quote`, or `dq` for short, is similar to `quote` but can accept multiple values; it is used to specify expressions to be retained at the current level and not expanded.
 
 `dsl-quasiquote`, or `dqq` for short, is similar to `quasiquote` but can accept multiple values. `dsl-comma` can be used inside for local expansion, and it supports multiple levels of nesting.
